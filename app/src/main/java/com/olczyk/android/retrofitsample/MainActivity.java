@@ -4,6 +4,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
@@ -27,17 +30,22 @@ public class MainActivity extends AppCompatActivity {
 
     private PostActionRetrofit postActionRetrofit;
 
+//    Gson gson = new GsonBuilder().serializeNulls().create();
+
     @AfterViews
     public void aVoid(){
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://jsonplaceholder.typicode.com/")
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(/*gson*/))
                 .build();
         postActionRetrofit = retrofit.create(PostActionRetrofit.class);
 
 //        getPost();
 //        getComments();
-        createPost();
+//        createPost();
+//        updatePost();
+//        updateWithPatchPost();
+        deletePost();
     }
 
     private void getComments() {
@@ -140,6 +148,84 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<Post> call, Throwable t) {
 
+            }
+        });
+    }
+
+    private void updatePost() {
+        Post post = new Post(12,null,"New Text");
+
+        Call<Post> call = postActionRetrofit.putPost(5,post);
+
+        call.enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                if(!response.isSuccessful()){
+                    textViewResult.setText("Code: " + response.code());
+                    return;
+                }
+                Post postResponse = response.body();
+
+                String content = "";
+                content += "Code: " + response.code() + "\n";
+                content += "ID: "+ postResponse.getId() + "\n";
+                content += "UserId: " + postResponse.getUserId() + "\n";
+                content += "Title: " + postResponse.getTitle() + "\n";
+                content += "Content: " + postResponse.getText() + "\n";
+                textViewResult.setText(content);
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                textViewResult.setText(t.getMessage());
+            }
+        });
+    }
+
+    private void updateWithPatchPost() {
+        Post post = new Post(12,null,"New Text");
+
+        Call<Post> call = postActionRetrofit.patchPost(5,post);
+
+        call.enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                if(!response.isSuccessful()){
+                    textViewResult.setText("Code: " + response.code());
+                    return;
+                }
+                Post postResponse = response.body();
+
+                String content = "";
+                content += "Code: " + response.code() + "\n";
+                content += "ID: "+ postResponse.getId() + "\n";
+                content += "UserId: " + postResponse.getUserId() + "\n";
+                content += "Title: " + postResponse.getTitle() + "\n";
+                content += "Content: " + postResponse.getText() + "\n";
+                textViewResult.setText(content);
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                textViewResult.setText(t.getMessage());
+            }
+        });
+    }
+
+    private void deletePost() {
+        Call<Void> call = postActionRetrofit.deletePost(5);
+
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if(response.isSuccessful()){
+                    textViewResult.setText("Code: " + response.code());
+                }
+
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                textViewResult.setText(t.getMessage());
             }
         });
     }
